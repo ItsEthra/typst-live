@@ -16,11 +16,17 @@ pub async fn root() -> Html<&'static str> {
     include_str!("base.html").into()
 }
 
-pub async fn target() -> impl IntoResponse {
-    let data = match fs::read("output.pdf").await {
+pub async fn target(State(state): State<Arc<ServerState>>) -> impl IntoResponse {
+    let filename = if state.args.no_recompile {
+        &state.args.filename
+    } else {
+        "output.pdf"
+    };
+
+    let data = match fs::read(filename).await {
         Ok(data) => data,
         Err(err) => {
-            error!("Failed to read `output.pdf` {err:?}");
+            error!("Failed to read `{filename}` {err:?}");
             vec![]
         }
     };

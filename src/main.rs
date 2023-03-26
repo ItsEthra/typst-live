@@ -1,13 +1,25 @@
+use argh::FromArgs;
 use axum::{routing::get, Router, Server};
 use eyre::Result;
 use state::ServerState;
-use std::{env, fs, sync::Arc};
+use std::{fs, sync::Arc};
 use tokio::{runtime::Runtime, signal::ctrl_c, sync::Notify};
 use tracing::{error, info, warn};
 
 mod routes;
 mod state;
 mod watcher;
+
+#[derive(FromArgs)]
+/// hot reloading for typst.
+struct Args {
+    /// turns off recompilation, just listens to file changes and updates the webpage.
+    #[argh(switch, short = 'R')]
+    no_recompile: bool,
+    #[argh(positional)]
+    /// specifies file to recompile when changes are made. If `--watch` is used it should be pdf file.
+    filename: String,
+}
 
 async fn run(state: Arc<ServerState>) -> Result<()> {
     let router = Router::new()
@@ -33,27 +45,24 @@ fn main() -> Result<()> {
 
     tracing_subscriber::fmt::init();
 
-    let Some(file) = env::args().nth(1) else {
-        info!("Usage: ./typst-live <file.typ>");
-        return Ok(());
-    };
+    let args: Args = argh::from_env();
 
-    if fs::metadata(&file).is_err() {
-        error!("File `{file}` doesn't exist");
+    if fs::metadata(&args.filename).is_err() {
+        error!("File `{}` doesn't exist", args.filename);
         return Ok(());
     }
 
-    if fs::metadata("output.pdf").is_ok() {
+    if fs::metadata("output.pdf").is_ok() && args.no_recompile {
         warn!("Remove or save `output.pdf` as it will be overwritten. Exiting");
         return Ok(());
     }
 
     let tokio = Runtime::new()?;
     let state = Arc::new(ServerState {
-        typstname: file.clone().into(),
         shutdown: Notify::new(),
         changed: Notify::new(),
         tokio,
+        args,
     });
 
     state.tokio.spawn(graceful_shutdown(state.clone()));
