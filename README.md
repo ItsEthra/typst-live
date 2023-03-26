@@ -2,8 +2,8 @@
 This is a simple utility to watch for changes in your [typst](https://github.com/typst/typst) file and automaticaly
 recompile them for live feedback.
 
-# 🚨 Warning
-Official `typst` binary has a `--watch` flag I didn't know about at the time of writing this 🥲
+## Difference from `--watch` flag
+`typst-live` hosts a webserver that automatically refreshes the page so you don't have to manually reload it with `typst --watch`
 
 ## Installation
 If you have [rust](https://www.rust-lang.org) setup use the following command:
