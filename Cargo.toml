@@ -1,0 +1,16 @@
+[package]
+name = "typst-live"
+description = "Hot reloading for your typst files"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["ItsEthra"]
+repository = "https://github.com/ItsEthra/typst-live"
+
+[dependencies]
+axum = { version = "0.6.12", features = ["ws"] }
+eyre = "0.6.8"
+notify = "5.1.0"
+tokio = { version = "1.26.0", features = ["full"] }
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"

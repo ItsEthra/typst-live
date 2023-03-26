@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script>
+    const ws = new WebSocket("ws://0.0.0.0:5599/listen");
+    ws.addEventListener('open', (_) => {
+      console.log('Hello!')
+    });
+
+    ws.addEventListener('message', (e) => {
+      document.getElementById("target").src += '';
+    });
+  </script>
+
+  <style>
+    body {
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <iframe id="target" src="/target.pdf" type="application/pdf" width="100%" height="100%" />
+</body>
+
+</html>
