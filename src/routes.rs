@@ -35,7 +35,7 @@ pub async fn listen(
     State(state): State<Arc<ServerState>>,
     ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
-    ws.on_upgrade(|socket| async { hander(socket, state).await })
+    ws.on_upgrade(|socket| hander(socket, state))
 }
 
 async fn hander(mut socket: WebSocket, state: Arc<ServerState>) {
