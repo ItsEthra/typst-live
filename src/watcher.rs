@@ -1,11 +1,11 @@
 use crate::state::ServerState;
 use eyre::Result;
-use notify::{Event, EventKind, INotifyWatcher, RecursiveMode, Watcher};
+use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::{path::Path, process::Stdio, sync::Arc, time::Duration};
 use tokio::{process::Command, time::Instant};
 use tracing::{debug, error};
 
-pub async fn setup_watching_typst(state: Arc<ServerState>) -> Result<INotifyWatcher> {
+pub async fn setup_watching_typst(state: Arc<ServerState>) -> Result<RecommendedWatcher> {
     let mut last_update = Instant::now();
     let typstname = state.typstname.read().await.clone();
 
