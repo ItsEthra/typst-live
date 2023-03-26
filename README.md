@@ -9,10 +9,10 @@ cargo install typst-live
 ```
 
 ## Usage
-* 1. Lauch `typst-live` from your terminal:
+* Lauch `typst-live` from your terminal:
 ```
 $ ./typst-live <file.typ>
 Server is listening on http://0.0.0.0:5599/
 ```
-* 2. Go to `http://0.0.0.0:5599/` in your browser.
-* 3. Now edit your `file.typ` and watch changes appear in browser tab.
+* Go to `http://0.0.0.0:5599/` in your browser.
+* Now edit your `file.typ` and watch changes appear in browser tab.
