@@ -15,7 +15,7 @@ cargo install typst-live
 * Lauch `typst-live` from your terminal:
 ```
 $ ./typst-live <file.typ>
-Server is listening on http://0.0.0.0:5599/
+Server is listening on http://127.0.0.1:5599/
 ```
-* Go to `http://0.0.0.0:5599/` in your browser.
+* Go to `http://127.0.0.1:5599/` in your browser.
 * Now edit your `file.typ` and watch changes appear in browser tab.

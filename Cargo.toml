@@ -8,6 +8,7 @@ authors = ["ItsEthra"]
 repository = "https://github.com/ItsEthra/typst-live"
 
 [dependencies]
+argh = "0.1.10"
 axum = { version = "0.6.12", features = ["ws"] }
 eyre = "0.6.8"
 notify = "5.1.0"

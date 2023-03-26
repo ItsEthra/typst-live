@@ -16,7 +16,7 @@ async fn run(state: Arc<ServerState>) -> Result<()> {
         .route("/listen", get(routes::listen))
         .with_state(state.clone());
 
-    let server = Server::bind(&"0.0.0.0:5599".parse()?).serve(router.into_make_service());
+    let server = Server::bind(&"127.0.0.1:5599".parse()?).serve(router.into_make_service());
     info!("Server is listening on http://{}/", server.local_addr());
 
     tokio::select! {
