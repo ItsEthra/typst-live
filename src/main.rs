@@ -47,12 +47,17 @@ fn main() -> Result<()> {
 
     let args: Args = argh::from_env();
 
+    if args.no_recompile && !args.filename.ends_with(".pdf") {
+        error!("When using --no-recompile option, filename must be pdf file");
+        return Ok(());
+    }
+
     if fs::metadata(&args.filename).is_err() {
         error!("File `{}` doesn't exist", args.filename);
         return Ok(());
     }
 
-    if fs::metadata("output.pdf").is_ok() && args.no_recompile {
+    if fs::metadata("output.pdf").is_ok() && !args.no_recompile {
         warn!("Remove or save `output.pdf` as it will be overwritten. Exiting");
         return Ok(());
     }
