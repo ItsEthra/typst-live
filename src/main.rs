@@ -19,6 +19,12 @@ struct Args {
     #[argh(positional)]
     /// specifies file to recompile when changes are made. If `--watch` is used it should be pdf file.
     filename: String,
+	#[argh(option, short = 'A', default = "String::from(\"127.0.0.1\")")]
+	/// specifies the listen address. Defaults to 127.0.0.1
+	address: String,
+	#[argh(option, short = 'P', default = "5599")]
+	/// specifies the port to listen on. Defaults to 5599
+	port: u16,
 }
 
 async fn run(state: Arc<ServerState>) -> Result<()> {
@@ -28,7 +34,8 @@ async fn run(state: Arc<ServerState>) -> Result<()> {
         .route("/listen", get(routes::listen))
         .with_state(state.clone());
 
-    let server = Server::bind(&"127.0.0.1:5599".parse()?).serve(router.into_make_service());
+	let addr = format!("{}:{}",state.args.address, state.args.port);	
+    let server = Server::bind(&addr.parse()?).serve(router.into_make_service());
     info!("Server is listening on http://{}/", server.local_addr());
 
     tokio::select! {
