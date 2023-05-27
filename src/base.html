@@ -3,14 +3,28 @@
 
 <head>
   <script>
-    const ws = new WebSocket("ws://{addr}:{port}/listen");
-    ws.addEventListener('open', (_) => {
-      console.log('Hello!')
-    });
+    function try_connect() {
+      const ws = new WebSocket("ws://{addr}:{port}/listen");
+      ws.addEventListener('open', (_) => {
+        console.log('Hello!')
+      });
 
-    ws.addEventListener('message', (e) => {
-      document.getElementById("target").src += '';
-    });
+      ws.addEventListener('message', (e) => {
+        console.log('Updating pdf')
+
+        document.getElementById("target").src += '';
+      });
+
+      ws.addEventListener('close', (_) => {
+        console.log('Waiting 500ms to reconnect')
+        setTimeout(() => {
+          console.log('Reconnecting')
+          try_connect()
+        }, 500);
+      });
+    }
+
+    try_connect();
   </script>
 
   <style>

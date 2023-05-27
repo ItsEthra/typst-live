@@ -8,15 +8,18 @@ use axum::{
     http::{header::CONTENT_TYPE, Response},
     response::{Html, IntoResponse},
 };
-use std::sync::Arc;
+use std::{
+    io::{self, ErrorKind},
+    sync::Arc,
+};
 use tokio::fs;
 use tracing::{debug, error};
 
 pub async fn root(State(state): State<Arc<ServerState>>) -> Html<String> {
-	include_str!("base.html")
-		.replace("{addr}", &state.args.address)
-		.replace("{port}", &state.args.port.to_string())
-		.into()
+    include_str!("base.html")
+        .replace("{addr}", &state.args.address)
+        .replace("{port}", &state.args.port.to_string())
+        .into()
 }
 
 pub async fn target(State(state): State<Arc<ServerState>>) -> impl IntoResponse {
@@ -52,7 +55,16 @@ async fn hander(mut socket: WebSocket, state: Arc<ServerState>) {
         state.changed.notified().await;
         debug!("Pdf recompiled, sending websocket event");
 
-        if let Err(err) = socket.send(Message::Text("refresh".into())).await {
+        if let Err(err) = socket
+            .send(Message::Text("refresh".into()))
+            .await
+            .map_err(|e| e.into_inner())
+        {
+            match err.downcast_ref::<io::Error>() {
+                Some(io) if io.kind() == ErrorKind::BrokenPipe => continue,
+                _ => {}
+            }
+
             error!("Failed to send message to the client: {err:?}")
         }
         debug!("Waiting for the next recompilation");
