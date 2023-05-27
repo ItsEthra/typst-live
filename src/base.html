@@ -3,7 +3,7 @@
 
 <head>
   <script>
-    const ws = new WebSocket("ws://127.0.0.1:5599/listen");
+    const ws = new WebSocket("ws://{addr}:{port}/listen");
     ws.addEventListener('open', (_) => {
       console.log('Hello!')
     });
