@@ -1,5 +1,5 @@
 # Typst-live
-This is a simple utility to watch for changes in your [typst](https://github.com/typst/typst) file and automaticaly
+This is a simple utility to watch for changes in your [typst](https://github.com/typst/typst) file and automatically
 recompile them for live feedback. `typst-live` allows you to open a tab in your browser with typst generated pdf and have it automatically reload
 whenever your source `.typ` files are changed.
 
@@ -14,7 +14,7 @@ cargo install typst-live
 
 ## Usage
 ### 1. With auto recompilation
-* Lauch `typst-live` from your terminal:
+* Launch `typst-live` from your terminal:
 ```
 $ ./typst-live <file.typ>
 Server is listening on http://127.0.0.1:5599/
