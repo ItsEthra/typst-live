@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script>
+        let connected = false;
+
+        function tryConnect() {
+            console.log('[tlive] - Trying to connect to the server')
+
+            const ws = new WebSocket("ws://{addr}:{port}/listen");
+            ws.addEventListener('open', (_) => {
+                console.log('[tlive] - Connected to the server')
+
+                connected = true;
+            });
+
+            ws.addEventListener('message', (e) => {
+                console.log('[tlive] - Updating pdf')
+
+                document.getElementById("target").src += '';
+            });
+
+            ws.addEventListener('close', (_) => {
+                console.log('[tlive] - Disconnected')
+
+                connected = false;
+            });
+
+            setTimeout(() => {
+                if (connected) return;
+                tryConnect()
+            })
+        }
+
+        tryConnect();
+    </script>
+
+    <style>
+        body {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe id="target" src="/target.pdf" type="application/pdf" width="100%" height="100%" />
+</body>
+
+</html>
