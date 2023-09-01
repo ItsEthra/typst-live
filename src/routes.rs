@@ -43,10 +43,10 @@ pub async fn listen(
     State(state): State<Arc<ServerState>>,
     ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
-    ws.on_upgrade(|socket| hander(socket, state))
+    ws.on_upgrade(|socket| handler(socket, state))
 }
 
-async fn hander(mut socket: WebSocket, state: Arc<ServerState>) {
+async fn handler(mut socket: WebSocket, state: Arc<ServerState>) {
     loop {
         state.changed.notified().await;
         _ = socket.send(Message::Text("refresh".into())).await;
