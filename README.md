@@ -12,6 +12,11 @@ If you have [rust](https://www.rust-lang.org) setup use the following command:
 cargo install typst-live
 ```
 
+If you use Nix, you can run typst-live directly from the GitHub repository using the following command:
+```
+nix run github:ItsEthra/typst-live
+```
+
 ## Usage
 ### 1. With auto recompilation
 * Launch `typst-live` from your terminal:
