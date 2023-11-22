@@ -1,0 +1,16 @@
+name: Check Nix flake
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    name: Check Nix flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: cachix/install-nix-action@v22
+      - uses: actions/checkout@v4
+      - name: Build and run
+        run: nix flake check
