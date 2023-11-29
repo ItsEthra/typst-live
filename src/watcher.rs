@@ -14,6 +14,7 @@ pub async fn setup_watching_typst(state: Arc<ServerState>) -> Result<Recommended
             .arg("output.pdf")
             .spawn()
         {
+            #[allow(clippy::let_underscore_future)]
             Ok(child) => {
                 _ = state.tokio.spawn(async move {
                     match child.wait_with_output().await {
