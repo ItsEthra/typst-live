@@ -42,7 +42,7 @@ async fn run(state: Arc<ServerState>) -> Result<()> {
     );
 
     if open::that_detached(format!("http://{}", server.local_addr())).is_err() {
-        println!("[WARN] Could not open the preview in your browser. Try opening it manually...");
+        println!("[WARN] Could not open the preview in your browser. Open URL manually: http://{}", server.local_addr());
     }
 
     tokio::select! {
