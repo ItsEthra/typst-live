@@ -1,9 +1,9 @@
 use argh::FromArgs;
-use axum::{routing::get, Router, Server};
+use axum::{routing::get, Router};
 use eyre::Result;
 use state::ServerState;
-use std::{fs, sync::Arc};
-use tokio::{runtime::Runtime, signal::ctrl_c, sync::Notify};
+use std::{fs, future::IntoFuture, sync::Arc};
+use tokio::{net::TcpListener, runtime::Runtime, signal::ctrl_c, sync::Notify};
 
 mod routes;
 mod state;
@@ -34,19 +34,18 @@ async fn run(state: Arc<ServerState>) -> Result<()> {
         .with_state(state.clone());
 
     let addr = format!("{}:{}", state.args.address, state.args.port);
-    let server = Server::bind(&addr.parse()?).serve(router.into_make_service());
+    let listener = TcpListener::bind(&addr).await?;
 
-    println!(
-        "[INFO] Server is listening on http://{}/",
-        server.local_addr()
-    );
+    let url = format!("http://{}", listener.local_addr()?);
+    println!("[INFO] Server is listening on {url}",);
 
-    if open::that_detached(format!("http://{}", server.local_addr())).is_err() {
-        println!("[WARN] Could not open the preview in your browser. Open URL manually: http://{}", server.local_addr());
+    if open::that_detached(&url).is_err() {
+        println!("[WARN] Could not open the preview in your browser. Open URL manually: {url}");
     }
 
+    let fut = axum::serve(listener, router).into_future();
     tokio::select! {
-        _ = server => {},
+        _ = fut => {},
         _ = state.shutdown.notified() => {},
     };
 

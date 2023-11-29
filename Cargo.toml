@@ -9,8 +9,8 @@ repository = "https://github.com/ItsEthra/typst-live"
 
 [dependencies]
 argh = "0.1.10"
-axum = { version = "0.6.12", features = ["ws"] }
+axum = { version = "0.7.1", features = ["ws"] }
 eyre = "0.6.8"
-notify = "5.1.0"
+notify = "6.1.1"
 open = "5.0.0"
 tokio = { version = "1.26.0", features = ["full"] }

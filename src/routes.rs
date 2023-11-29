@@ -1,6 +1,6 @@
 use crate::state::ServerState;
 use axum::{
-    body::Full,
+    body::Body,
     extract::{
         ws::{Message, WebSocket},
         State, WebSocketUpgrade,
@@ -35,7 +35,7 @@ pub async fn target(State(state): State<Arc<ServerState>>) -> impl IntoResponse 
 
     Response::builder()
         .header(CONTENT_TYPE, "application/pdf")
-        .body(Full::from(data))
+        .body(Body::from(data))
         .expect("Failed to build response")
 }
 
