@@ -23,8 +23,10 @@
                 console.log('[tlive] - Updating pdf')
 
                 const pdf = document.getElementById("target")
-                pdf.src += '';
-                pdf.focus();
+                if (pdf) {
+                    pdf.src += '';
+                    pdf.focus();
+                }
             });
 
             ws.addEventListener('close', (_) => {
@@ -44,7 +46,11 @@
     </script>
 
     <style>
+        iframe {
+            border: none;
+        }
         body {
+            display: flex;
             width: 100vw;
             height: 100vh;
             margin: 0;
