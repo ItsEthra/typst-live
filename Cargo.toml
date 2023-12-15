@@ -1,5 +1,5 @@
 [package]
-name = "typst-live"
+name = "typst-live-dev"
 description = "Hot reloading for your typst files"
 version = "0.6.1"
 edition = "2021"
