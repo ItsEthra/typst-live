@@ -4,7 +4,11 @@
 <head>
     <script>
         let connected = false;
-
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('target').focus();
+        });
+        
         function tryConnect() {
             console.log('[tlive] - Trying to connect to the server')
 
@@ -18,7 +22,11 @@
             ws.addEventListener('message', (e) => {
                 console.log('[tlive] - Updating pdf')
 
-                document.getElementById("target").src += '';
+                const pdf = document.getElementById("target")
+                if (pdf) {
+                    pdf.src += '';
+                    pdf.focus();
+                }
             });
 
             ws.addEventListener('close', (_) => {
@@ -37,7 +45,11 @@
     </script>
 
     <style>
+        iframe {
+            border: none;
+        }
         body {
+            display: flex;
             width: 100vw;
             height: 100vh;
             margin: 0;
