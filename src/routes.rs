@@ -11,11 +11,8 @@ use axum::{
 use std::sync::Arc;
 use tokio::fs;
 
-pub async fn root(State(state): State<Arc<ServerState>>) -> Html<String> {
-    include_str!("index.html")
-        .replace("{addr}", &state.args.address)
-        .replace("{port}", &state.args.port.to_string())
-        .into()
+pub async fn root() -> Html<&'static str> {
+    include_str!("index.html").into()
 }
 
 pub async fn target(State(state): State<Arc<ServerState>>) -> impl IntoResponse {

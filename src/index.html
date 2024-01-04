@@ -2,63 +2,69 @@
 <html>
 
 <head>
-    <script>
-        let connected = false;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('target').focus();
-        });
-        
-        function tryConnect() {
-            console.log('[tlive] - Trying to connect to the server')
+  <script>
+    let connected = false;
 
-            const ws = new WebSocket("ws://{addr}:{port}/listen");
-            ws.addEventListener('open', (_) => {
-                console.log('[tlive] - Connected to the server')
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('target').focus();
+    });
 
-                connected = true;
-            });
+    function tryConnect() {
+      console.log('[tlive] - Trying to connect to the server')
 
-            ws.addEventListener('message', (e) => {
-                console.log('[tlive] - Updating pdf')
+      let path = new URL(location);
+      path.protocol = 'ws:';
+      path.pathname = '/listen';
 
-                const pdf = document.getElementById("target")
-                if (pdf) {
-                    pdf.src += '';
-                    pdf.focus();
-                }
-            });
+      const ws = new WebSocket(path.toString());
 
-            ws.addEventListener('close', (_) => {
-                console.log('[tlive] - Disconnected')
+      ws.addEventListener('open', (_) => {
+        console.log('[tlive] - Connected to the server')
 
-                connected = false;
-            });
+        connected = true;
+      });
 
-            setTimeout(() => {
-                if (connected) return;
-                tryConnect()
-            })
+      ws.addEventListener('message', (e) => {
+        console.log('[tlive] - Updating pdf')
+
+        const pdf = document.getElementById("target")
+        if (pdf) {
+          pdf.src += '';
+          pdf.focus();
         }
+      });
 
-        tryConnect();
-    </script>
+      ws.addEventListener('close', (_) => {
+        console.log('[tlive] - Disconnected')
 
-    <style>
-        iframe {
-            border: none;
-        }
-        body {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            margin: 0;
-        }
-    </style>
+        connected = false;
+      });
+
+      setTimeout(() => {
+        if (connected) return;
+        tryConnect()
+      })
+    }
+
+    tryConnect();
+  </script>
+
+  <style>
+    iframe {
+      border: none;
+    }
+
+    body {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+    }
+  </style>
 </head>
 
 <body>
-    <iframe id="target" src="/target.pdf" type="application/pdf" width="100%" height="100%" />
+  <iframe id="target" src="/target.pdf" type="application/pdf" width="100%" height="100%" />
 </body>
 
 </html>
