@@ -98,8 +98,10 @@ async fn graceful_shutdown(state: Arc<ServerState>) {
     // Reset to prevent ^C from appearing.
     print!("\r");
 
-    if let Err(e) = fs::remove_file("output.pdf") {
-        println!("[WARN] Failed to remove `output.pdf`. {e}");
+    if !state.args.no_recompile {
+        if let Err(e) = fs::remove_file("output.pdf") {
+            println!("[WARN] Failed to remove `output.pdf`. {e}");
+        }
     }
 
     state.shutdown.notify_waiters();
