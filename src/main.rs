@@ -12,11 +12,14 @@ mod watcher;
 #[derive(FromArgs)]
 /// hot reloading for typst.
 struct Args {
+    /// do not open browser tab when launched.
+    #[argh(switch, short = 'T')]
+    no_browser_tab: bool,
     /// turns off recompilation, just listens to file changes and updates the webpage.
     #[argh(switch, short = 'R')]
     no_recompile: bool,
     #[argh(positional)]
-    /// specifies file to recompile when changes are made. If `--watch` is used it should be pdf file.
+    /// specifies file to recompile when changes are made. If `--no-recompile` is used it should be pdf file.
     filename: String,
     #[argh(option, short = 'A', default = "String::from(\"127.0.0.1\")")]
     /// specifies the listen address. Defaults to 127.0.0.1
@@ -39,7 +42,7 @@ async fn run(state: Arc<ServerState>) -> Result<()> {
     let url = format!("http://{}", listener.local_addr()?);
     println!("[INFO] Server is listening on {url}",);
 
-    if open::that_detached(&url).is_err() {
+    if !state.args.no_browser_tab && open::that_detached(&url).is_err() {
         println!("[WARN] Could not open the preview in your browser. Open URL manually: {url}");
     }
 
