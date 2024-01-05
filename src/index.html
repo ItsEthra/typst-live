@@ -15,6 +15,14 @@
 
     let ws = null;
 
+    function updatePdf() {
+      const pdf = document.getElementById("target")
+      if (pdf) {
+        pdf.src += '';
+        pdf.focus();
+      }
+    }
+
     function ensureConnection() {
       if (connected) return;
 
@@ -23,16 +31,12 @@
       ws.addEventListener('open', (_) => {
         connected = true;
         console.log('[typst-live] - Connected')
+        updatePdf();
       });
 
       ws.addEventListener('message', (_) => {
         console.log('[typst-live] - Updating pdf')
-
-        const pdf = document.getElementById("target")
-        if (pdf) {
-          pdf.src += '';
-          pdf.focus();
-        }
+        updatePdf();
       });
 
       ws.addEventListener('close', (_) => {
