@@ -44,10 +44,10 @@
         console.log('[typst-live] - Disconnected')
       });
 
-      ws.onerror = (_) => {
+      ws.addEventListener('error', (_) => {
         connected = false;
         console.log('[typst-live] - Connection error')
-      };
+      });
     }
 
     ensureConnection();
