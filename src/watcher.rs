@@ -12,6 +12,7 @@ pub async fn setup_watching_typst(state: Arc<ServerState>) -> Result<Recommended
             .arg("watch")
             .arg(&state.args.filename)
             .arg("output.pdf")
+            .args(&state.args.remaining)
             .spawn()
         {
             #[allow(clippy::let_underscore_future)]

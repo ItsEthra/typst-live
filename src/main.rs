@@ -1,32 +1,33 @@
-use argh::FromArgs;
 use axum::{routing::get, Router};
+use clap::Parser;
 use eyre::Result;
 use state::ServerState;
-use std::{fs, future::IntoFuture, sync::Arc};
+use std::{ffi::OsString, fs, future::IntoFuture, sync::Arc};
 use tokio::{net::TcpListener, runtime::Runtime, signal::ctrl_c, sync::Notify};
 
 mod routes;
 mod state;
 mod watcher;
 
-#[derive(FromArgs)]
+#[derive(Parser)]
 /// hot reloading for typst.
 struct Args {
     /// do not open browser tab when launched.
-    #[argh(switch, short = 'T')]
+    #[arg(long, short = 'T')]
     no_browser_tab: bool,
     /// turns off recompilation, just listens to file changes and updates the webpage.
-    #[argh(switch, short = 'R')]
+    #[arg(long, short = 'R')]
     no_recompile: bool,
-    #[argh(positional)]
     /// specifies file to recompile when changes are made. If `--no-recompile` is used it should be pdf file.
     filename: String,
-    #[argh(option, short = 'A', default = "String::from(\"127.0.0.1\")")]
     /// specifies the listen address. Defaults to 127.0.0.1
+    #[arg(long, short = 'A', default_value = "127.0.0.1")]
     address: String,
-    #[argh(option, short = 'P', default = "5599")]
     /// specifies the port to listen on. Defaults to 5599
+    #[arg(long, short = 'P', default_value = "5599")]
     port: u16,
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
+    remaining: Vec<OsString>,
 }
 
 async fn run(state: Arc<ServerState>) -> Result<()> {
@@ -59,7 +60,7 @@ fn main() -> Result<()> {
     #[cfg(debug_assertions)]
     std::env::set_var("RUST_LOG", "hyper=error,debug");
 
-    let args: Args = argh::from_env();
+    let args: Args = Args::parse();
 
     if args.no_recompile && !args.filename.ends_with(".pdf") {
         println!("[ERR] When using --no-recompile option, filename must be pdf file");
