@@ -22,10 +22,10 @@ struct Args {
     no_recompile: bool,
     /// specifies file to recompile when changes are made. If `--no-recompile` is used it should be pdf file.
     filename: PathBuf,
-    /// specifies the listen address. Defaults to 127.0.0.1
+    /// specifies the listen address.
     #[arg(long, short = 'A', default_value = "127.0.0.1")]
     address: String,
-    /// specifies the port to listen on. Defaults to 5599
+    /// specifies the port to listen on.
     #[arg(long, short = 'P', default_value = "5599")]
     port: u16,
     #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
