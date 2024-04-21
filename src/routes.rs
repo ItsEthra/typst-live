@@ -1,4 +1,4 @@
-use crate::state::ServerState;
+use crate::ServerState;
 use axum::{
     body::Body,
     extract::{
@@ -8,6 +8,7 @@ use axum::{
     http::{header::CONTENT_TYPE, Response},
     response::{Html, IntoResponse},
 };
+use log::{debug, error};
 use std::sync::Arc;
 use tokio::fs;
 
@@ -19,13 +20,13 @@ pub async fn target(State(state): State<Arc<ServerState>>) -> impl IntoResponse 
     let filename = if state.args.no_recompile {
         &state.args.filename
     } else {
-        "output.pdf"
+        &state.scratch
     };
 
     let data = match fs::read(filename).await {
         Ok(data) => data,
         Err(err) => {
-            println!("[ERR] Failed to read `{filename}` {err:?}");
+            error!("Failed to read {filename:?}: {err:?}");
             vec![]
         }
     };
@@ -40,12 +41,16 @@ pub async fn listen(
     State(state): State<Arc<ServerState>>,
     ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
+    debug!("New websocket connection");
+
     ws.on_upgrade(|socket| handler(socket, state))
 }
 
 async fn handler(mut socket: WebSocket, state: Arc<ServerState>) {
     loop {
         state.changed.notified().await;
+        debug!("Sending refresh message to websocket client");
+
         _ = socket.send(Message::Text("refresh".into())).await;
     }
 }

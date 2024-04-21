@@ -13,47 +13,24 @@
     path.protocol = 'ws:';
     path.pathname = '/listen';
 
-    let ws = null;
+    const ws = new WebSocket(path);
+    ws.addEventListener("open", (event) => {
+      console.log("[typst-live] Connected to the listen endpoint");
+    })
 
-    function updatePdf() {
-      const pdf = document.getElementById("target")
-      if (pdf) {
-        pdf.src += '';
-        pdf.focus();
+    ws.addEventListener("message", (message) => {
+      if (message.data != "refresh") {
+        console.error(`[typst-live] Received unknown message from websocket: ${message.data}`)
+        return;
       }
-    }
 
-    function ensureConnection() {
-      if (connected) return;
+      console.log("[typst-live] Got refresh message, updating pdf");
+      document.getElementById("target").src += ''
+    })
 
-      ws = new WebSocket(path.toString());
-
-      ws.addEventListener('open', (_) => {
-        connected = true;
-        console.log('[typst-live] - Connected')
-        updatePdf();
-      });
-
-      ws.addEventListener('message', (_) => {
-        console.log('[typst-live] - Updating pdf')
-        updatePdf();
-      });
-
-      ws.addEventListener('close', (_) => {
-        connected = false;
-        console.log('[typst-live] - Disconnected')
-      });
-
-      ws.addEventListener('error', (_) => {
-        connected = false;
-        console.log('[typst-live] - Connection error')
-      });
-    }
-
-    ensureConnection();
-    setInterval(function(){
-      ensureConnection()
-    }, 1000);
+    ws.addEventListener("closed", (_) => {
+      console.log("[typst-live] Connection closed");
+    })
   </script>
 
   <style>

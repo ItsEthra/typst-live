@@ -8,9 +8,13 @@ authors = ["ItsEthra"]
 repository = "https://github.com/ItsEthra/typst-live"
 
 [dependencies]
+anyhow = "1.0.82"
 axum = { version = "0.7.1", features = ["ws"] }
 clap = { version = "4.5.1", features = ["derive"] }
-eyre = "0.6.8"
+env_logger = "0.11.3"
+fastrand = "2.0.2"
+log = "0.4.21"
 notify = "6.1.1"
 open = "5.0.0"
 tokio = { version = "1.26.0", features = ["full"] }
+tokio-util = "0.7.10"
