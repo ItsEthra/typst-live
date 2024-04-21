@@ -13,24 +13,30 @@
     path.protocol = 'ws:';
     path.pathname = '/listen';
 
-    const ws = new WebSocket(path);
-    ws.addEventListener("open", (event) => {
-      console.log("[typst-live] Connected to the listen endpoint");
-    })
-
-    ws.addEventListener("message", (message) => {
-      if (message.data != "refresh") {
-        console.error(`[typst-live] Received unknown message from websocket: ${message.data}`)
+    function onMessage(event) {
+      if (event.data != "refresh") {
+        console.error(`[typst-live] Received unknown message from websocket: ${event.data}`)
         return;
       }
 
       console.log("[typst-live] Got refresh message, updating pdf");
       document.getElementById("target").src += ''
-    })
+      
+    }
 
-    ws.addEventListener("closed", (_) => {
+    function onOpen(event) {
+      console.log("[typst-live] Connected to the listen endpoint");
+    }
+
+    function onClose(event) {
       console.log("[typst-live] Connection closed");
-    })
+    }
+    
+    const ws = new WebSocket(path)
+
+    ws.addEventListener("open", onOpen)
+    ws.addEventListener("close", onClose)
+    ws.addEventListener("message", onMessage)
   </script>
 
   <style>
