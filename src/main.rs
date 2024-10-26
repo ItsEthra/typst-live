@@ -82,7 +82,8 @@ async fn main() -> Result<()> {
 
     let args: Args = Args::parse();
 
-    if args.no_recompile && !args.filename.ends_with(".pdf") {
+    let is_pdf = args.filename.extension().and_then(|x| x.to_str()) == Some("pdf");
+    if args.no_recompile && !is_pdf {
         error!("When using --no-recompile option, filename must be pdf file");
         return Ok(());
     }
