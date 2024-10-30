@@ -5,13 +5,13 @@
   <script>
     let connected = false;
 
-    document.addEventListener('DOMContentLoaded', function () {
-      document.getElementById('target').focus();
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("target").focus();
     });
 
     let path = new URL(location);
-    path.protocol = 'ws:';
-    path.pathname = '/listen';
+    path.protocol = location.protocol == "http:" ? "ws:" : "wss:";
+    path.pathname = "/listen";
 
     function onMessage(event) {
       if (event.data != "refresh") {
@@ -20,8 +20,8 @@
       }
 
       console.log("[typst-live] Got refresh message, updating pdf");
-      document.getElementById("target").src += ''
-      
+      document.getElementById("target").src += ""
+
     }
 
     function onOpen(event) {
@@ -31,7 +31,7 @@
     function onClose(event) {
       console.log("[typst-live] Connection closed");
     }
-    
+
     const ws = new WebSocket(path)
 
     ws.addEventListener("open", onOpen)
