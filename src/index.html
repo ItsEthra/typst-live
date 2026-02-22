@@ -3,40 +3,259 @@
 
 <head>
   <script>
-    let connected = false;
+    const PDF_PATH = "/target.pdf";
+    const STORAGE_KEY = "typst-live:pdf-view-state:v1";
+    const POLL_INTERVAL_MS = 300;
 
-    document.addEventListener("DOMContentLoaded", function () {
-      document.getElementById("target").focus();
-    });
+    let ws = null;
+    let reconnectDelayMs = 500;
+    let reconnectTimer = null;
+    let viewerPollTimer = null;
+    let lastKnownViewerState = { hash: "", page: null };
 
-    let path = new URL(location);
-    path.protocol = location.protocol == "http:" ? "ws:" : "wss:";
-    path.pathname = "/listen";
+    function getTarget() {
+      return document.getElementById("target");
+    }
+
+    function normalizeHash(hash) {
+      if (!hash) return "";
+      return hash.startsWith("#") ? hash : `#${hash}`;
+    }
+
+    function parsePageFromHash(hash) {
+      const normalized = normalizeHash(hash);
+      if (!normalized) return null;
+
+      const page = Number.parseInt(new URLSearchParams(normalized.slice(1)).get("page") || "", 10);
+      return Number.isFinite(page) && page > 0 ? page : null;
+    }
+
+    function sanitizeViewerState(state) {
+      if (!state || typeof state !== "object") {
+        return { hash: "", page: null };
+      }
+
+      const hash = normalizeHash(typeof state.hash === "string" ? state.hash : "");
+      const parsedPage = parsePageFromHash(hash);
+      const explicitPage = Number.isFinite(state.page) && state.page > 0 ? Math.trunc(state.page) : null;
+
+      return {
+        hash,
+        page: parsedPage !== null ? parsedPage : explicitPage,
+      };
+    }
+
+    function readStoredViewerState() {
+      const candidates = [];
+
+      if (history.state && typeof history.state === "object" && history.state.typstLivePdfViewerState) {
+        candidates.push(history.state.typstLivePdfViewerState);
+      }
+
+      try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          candidates.push(JSON.parse(raw));
+        }
+      } catch (err) {
+        console.warn("[typst-live] Failed to read sessionStorage state", err);
+      }
+
+      for (const candidate of candidates) {
+        const state = sanitizeViewerState(candidate);
+        if (state.hash || state.page) {
+          return state;
+        }
+      }
+
+      return { hash: "", page: null };
+    }
+
+    function persistViewerState(state) {
+      const nextState = sanitizeViewerState(state || captureViewerState());
+      lastKnownViewerState = nextState;
+
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+      } catch (err) {
+        // sessionStorage can be disabled by browser privacy settings.
+      }
+
+      const nextHistoryState = Object.assign({}, history.state || {}, {
+        typstLivePdfViewerState: nextState,
+      });
+      history.replaceState(nextHistoryState, "");
+
+      return nextState;
+    }
+
+    function readPdfHashFromIframe(target) {
+      if (!target) return "";
+
+      try {
+        const hash = target.contentWindow && target.contentWindow.location && target.contentWindow.location.hash;
+        if (typeof hash === "string" && hash.length > 0) {
+          return normalizeHash(hash);
+        }
+      } catch (_) {
+        // Native PDF viewers are often not script-readable from the parent context.
+      }
+
+      const attrSrc = target.getAttribute("src");
+      if (attrSrc) {
+        try {
+          return normalizeHash(new URL(attrSrc, location.href).hash);
+        } catch (_) {
+          // Ignore invalid/intermediate values.
+        }
+      }
+
+      if (target.src) {
+        try {
+          return normalizeHash(new URL(target.src, location.href).hash);
+        } catch (_) {
+          // Ignore invalid/intermediate values.
+        }
+      }
+
+      return "";
+    }
+
+    function captureViewerState() {
+      const target = getTarget();
+      const hash = readPdfHashFromIframe(target) || lastKnownViewerState.hash;
+      const page = parsePageFromHash(hash) || lastKnownViewerState.page || null;
+      const state = { hash, page };
+      lastKnownViewerState = state;
+      return state;
+    }
+
+    function buildPdfUrl(options = {}) {
+      const { bustCache = false, viewerState = lastKnownViewerState } = options;
+      const url = new URL(PDF_PATH, location.href);
+
+      if (bustCache) {
+        url.searchParams.set("t", Date.now().toString());
+      }
+
+      const state = sanitizeViewerState(viewerState);
+      if (state.hash) {
+        url.hash = state.hash.slice(1);
+      } else if (state.page) {
+        url.hash = `page=${state.page}`;
+      }
+
+      return url.toString();
+    }
+
+    function wireTarget(target) {
+      target.addEventListener("load", function () {
+        // Persist after each iframe load so top-level page reloads can restore the last view.
+        persistViewerState(captureViewerState());
+      });
+    }
+
+    function replaceIframeWithUrl(nextSrc) {
+      const target = getTarget();
+      if (!target) return;
+
+      // Safari/WebKit can keep showing a cached PDF even when the iframe src changes.
+      // Replacing the iframe forces the embedded PDF viewer to fully reinitialize.
+      const replacement = target.cloneNode(false);
+      wireTarget(replacement);
+      replacement.src = nextSrc;
+      target.replaceWith(replacement);
+    }
+
+    function refreshPdf() {
+      const viewerState = persistViewerState(captureViewerState());
+      const nextSrc = buildPdfUrl({ bustCache: true, viewerState });
+      replaceIframeWithUrl(nextSrc);
+    }
 
     function onMessage(event) {
-      if (event.data != "refresh") {
-        console.error(`[typst-live] Received unknown message from websocket: ${event.data}`)
+      if (event.data !== "refresh") {
+        console.error(`[typst-live] Received unknown message from websocket: ${event.data}`);
         return;
       }
 
       console.log("[typst-live] Got refresh message, updating pdf");
-      document.getElementById("target").src += ""
-
+      refreshPdf();
     }
 
-    function onOpen(event) {
+    function onOpen() {
+      reconnectDelayMs = 500;
       console.log("[typst-live] Connected to the listen endpoint");
     }
 
-    function onClose(event) {
-      console.log("[typst-live] Connection closed");
+    function scheduleReconnect() {
+      if (reconnectTimer !== null) {
+        return;
+      }
+
+      reconnectTimer = window.setTimeout(function () {
+        reconnectTimer = null;
+        connectWebSocket();
+      }, reconnectDelayMs);
+
+      reconnectDelayMs = Math.min(reconnectDelayMs * 2, 5000);
     }
 
-    const ws = new WebSocket(path)
+    function onClose() {
+      console.log("[typst-live] Connection closed");
+      scheduleReconnect();
+    }
 
-    ws.addEventListener("open", onOpen)
-    ws.addEventListener("close", onClose)
-    ws.addEventListener("message", onMessage)
+    function connectWebSocket() {
+      const path = new URL(location.href);
+      path.protocol = location.protocol === "http:" ? "ws:" : "wss:";
+      path.pathname = "/listen";
+      path.search = "";
+      path.hash = "";
+
+      ws = new WebSocket(path);
+      ws.addEventListener("open", onOpen);
+      ws.addEventListener("close", onClose);
+      ws.addEventListener("message", onMessage);
+      ws.addEventListener("error", function () {
+        // Let the close event drive reconnect behavior.
+      });
+    }
+
+    function startViewerPolling() {
+      if (viewerPollTimer !== null) {
+        window.clearInterval(viewerPollTimer);
+      }
+
+      viewerPollTimer = window.setInterval(function () {
+        captureViewerState();
+      }, POLL_INTERVAL_MS);
+    }
+
+    function persistOnLifecycleBoundary() {
+      persistViewerState(captureViewerState());
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      lastKnownViewerState = readStoredViewerState();
+
+      const target = getTarget();
+      wireTarget(target);
+      target.src = buildPdfUrl({ bustCache: true, viewerState: lastKnownViewerState });
+      target.focus();
+
+      startViewerPolling();
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") {
+          persistOnLifecycleBoundary();
+        }
+      });
+      window.addEventListener("pagehide", persistOnLifecycleBoundary);
+      window.addEventListener("beforeunload", persistOnLifecycleBoundary);
+
+      connectWebSocket();
+    });
   </script>
 
   <style>
@@ -54,7 +273,7 @@
 </head>
 
 <body>
-  <iframe id="target" src="/target.pdf" type="application/pdf" width="100%" height="100%" />
+  <iframe id="target" type="application/pdf" width="100%" height="100%"></iframe>
 </body>
 
 </html>

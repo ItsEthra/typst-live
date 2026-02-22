@@ -1,8 +1,8 @@
 use crate::ServerState;
 use anyhow::{bail, Result};
 use log::{debug, error};
-use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use std::{sync::Arc, time::Duration};
+use notify::{event::AccessKind, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use std::{path::Path, sync::Arc, time::Duration};
 use tokio::{process::Command, time::Instant};
 
 pub async fn setup_watching_typst(state: Arc<ServerState>) -> Result<RecommendedWatcher> {
@@ -36,16 +36,22 @@ pub async fn setup_watching_typst(state: Arc<ServerState>) -> Result<Recommended
     } else {
         state.args.filename.clone()
     };
+    let watched_file = watchpath.canonicalize().unwrap_or(watchpath.clone());
+    let watched_name = watched_file.file_name().map(|x| x.to_os_string());
+    let watched_parent = watched_file
+        .parent()
+        .and_then(|p| p.canonicalize().ok())
+        .or_else(|| watchpath.parent().map(|p| p.to_path_buf()));
 
     let mut watcher = notify::recommended_watcher(move |e: Result<Event, _>| match e {
-        Ok(e) if matches!(e.kind, EventKind::Modify(_)) => {
-            let ending = if state.args.no_recompile {
-                &state.args.filename
-            } else {
-                &state.scratch
-            };
+        Ok(e) => {
+            debug!("Watch event: kind={:?}, paths={:?}", e.kind, e.paths);
 
-            if e.paths.iter().any(|p| p.ends_with(ending))
+            let relevant_kind = matches!(e.kind, EventKind::Modify(_) | EventKind::Create(_) | EventKind::Any)
+                && !matches!(e.kind, EventKind::Access(AccessKind::Read));
+
+            if relevant_kind
+                && e.paths.iter().any(|p| matches_watched_file(p, watched_name.as_deref(), watched_parent.as_deref()))
                 && last_update.elapsed() > Duration::from_millis(100)
             {
                 debug!("File has changed, notifying waiters");
@@ -55,9 +61,33 @@ pub async fn setup_watching_typst(state: Arc<ServerState>) -> Result<Recommended
             }
         }
         Err(err) => error!("{err}"),
-        _ => {}
     })?;
     watcher.watch(watchpath.parent().unwrap(), RecursiveMode::NonRecursive)?;
 
     Ok(watcher)
+}
+
+fn matches_watched_file(
+    path: &Path,
+    watched_name: Option<&std::ffi::OsStr>,
+    watched_parent: Option<&Path>,
+) -> bool {
+    let Some(watched_name) = watched_name else {
+        return false;
+    };
+
+    if path.file_name() != Some(watched_name) {
+        return false;
+    }
+
+    let Some(watched_parent) = watched_parent else {
+        return true;
+    };
+
+    let event_parent = path.parent().unwrap_or(path);
+    let event_parent = event_parent
+        .canonicalize()
+        .unwrap_or_else(|_| event_parent.to_path_buf());
+
+    event_parent == watched_parent
 }
