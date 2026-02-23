@@ -17,6 +17,9 @@ struct Args {
     /// do not open browser tab when launched.
     #[arg(long, short = 'T')]
     no_browser_tab: bool,
+    /// use a custom program to open the webpage or, if -T is specified, the compiled pdf.
+    #[arg(long, short)]
+    program: Option<String>,
     /// turns off recompilation, just listens to file changes and updates the webpage.
     #[arg(long, short = 'R')]
     no_recompile: bool,
@@ -61,7 +64,18 @@ async fn run(state: Arc<ServerState>) -> Result<()> {
     let url = format!("http://{}", listener.local_addr()?);
     info!("Server is listening on {url}",);
 
-    if !state.args.no_browser_tab && open::that_detached(&url).is_err() {
+    let err = if let Some(program) = &state.args.program {
+        if state.args.no_browser_tab {
+            open::with_detached(&state.scratch, program).is_err()
+        } else {
+            open::with_detached(&url, program).is_err()
+        }
+    } else {
+        // relies on short-circuiting: if no_browser_tab is specified, don't launch
+        !state.args.no_browser_tab && open::that_detached(&url).is_err()
+    };
+
+    if err {
         warn!("Could not open the preview in your browser. Open URL manually: {url}");
     }
 
