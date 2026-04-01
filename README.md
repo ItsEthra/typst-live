@@ -1,3 +1,35 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=id">Bahasa Indonesia</a>
+        | <a href="https://openaitx.github.io/view.html?user=ItsEthra&project=typst-live&lang=as">অসমীয়া</
+      </div>
+    </div>
+  </details>
+</div>
+
 # Typst-live
 This is a simple utility to watch for changes in your [typst](https://github.com/typst/typst) file and automatically
 recompile them for live feedback. `typst-live` allows you to open a tab in your browser with typst generated pdf and have it automatically reload
